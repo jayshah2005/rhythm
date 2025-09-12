@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import LiquidProgress from './LiquidProgress';
+import MoodSelector from './MoodSelector';
+import { initDatabase, addCycle, getStatistics } from '../utils/database';
 
 const { width, height } = Dimensions.get('window');
 
@@ -28,11 +30,33 @@ const PomodoroTimer = () => {
   const [tempWorkDuration, setTempWorkDuration] = useState('25'); // for input
   const [tempBreakDuration, setTempBreakDuration] = useState('5'); // for input
   const [timeLeft, setTimeLeft] = useState(1 * 60); // Initialize with 1 minute for testing
+  const [db, setDb] = useState(null);
+  const [stats, setStats] = useState({ total: 0, work: 0, breaks: 0, today: 0 });
+  const [showMoodSelector, setShowMoodSelector] = useState(false);
+  const [pendingWorkCycle, setPendingWorkCycle] = useState(null);
   const intervalRef = useRef(null);
 
   // Timer durations
   const WORK_DURATION = workDuration * 60; // convert to seconds
   const BREAK_DURATION = breakDuration * 60; // convert to seconds
+
+  // Initialize database when component mounts
+  useEffect(() => {
+    const initializeDb = async () => {
+      try {
+        const database = initDatabase();
+        setDb(database);
+        
+        // Load initial statistics
+        const initialStats = await getStatistics(database);
+        setStats(initialStats);
+      } catch (error) {
+        console.error('Error initializing database:', error);
+      }
+    };
+    
+    initializeDb();
+  }, []);
 
   // Initialize timer when component mounts or durations change
   useEffect(() => {
@@ -61,30 +85,74 @@ const PomodoroTimer = () => {
   }, [isRunning, timeLeft]);
 
 
-  const handleTimerComplete = () => {
+  const handleTimerComplete = async () => {
     setIsRunning(false);
     Vibration.vibrate([0, 500, 200, 500]); // Vibration pattern
     
     if (!isBreak) {
-      // Work session completed - start break automatically
-      setCycles(prev => prev + 1);
-      setIsBreak(true);
-      setCurrentCycle(2);
-      setTimeLeft(BREAK_DURATION);
-      // Auto-start break timer
-      setTimeout(() => {
-        setIsRunning(true);
-      }, 1000); // 1 second delay to show the switch
+      // Work session completed - show mood selector
+      setPendingWorkCycle({
+        type: 'work',
+        duration: workDuration
+      });
+      setShowMoodSelector(true);
     } else {
-      // Break completed - start work automatically
+      // Break completed - save directly and start work
+      if (db) {
+        try {
+          await addCycle(db, 'break', breakDuration);
+          const updatedStats = await getStatistics(db);
+          setStats(updatedStats);
+        } catch (error) {
+          console.error('Error saving break cycle to database:', error);
+        }
+      }
+      
       setIsBreak(false);
       setCurrentCycle(1);
       setTimeLeft(WORK_DURATION);
       // Auto-start work timer
       setTimeout(() => {
         setIsRunning(true);
-      }, 1000); // 1 second delay to show the switch
+      }, 1000);
     }
+  };
+
+  const handleMoodSelect = async (mood) => {
+    setShowMoodSelector(false);
+    
+    if (db && pendingWorkCycle) {
+      try {
+        // Save work cycle with mood
+        await addCycle(db, pendingWorkCycle.type, pendingWorkCycle.duration, mood);
+        
+        // Update statistics
+        const updatedStats = await getStatistics(db);
+        setStats(updatedStats);
+      } catch (error) {
+        console.error('Error saving work cycle with mood to database:', error);
+      }
+    }
+    
+    if (mood === 'keep_going') {
+      // Keep going - restart work timer
+      setCycles(prev => prev + 1);
+      setTimeLeft(WORK_DURATION);
+      setTimeout(() => {
+        setIsRunning(true);
+      }, 1000);
+    } else {
+      // Normal flow - start break
+      setCycles(prev => prev + 1);
+      setIsBreak(true);
+      setCurrentCycle(2);
+      setTimeLeft(BREAK_DURATION);
+      setTimeout(() => {
+        setIsRunning(true);
+      }, 1000);
+    }
+    
+    setPendingWorkCycle(null);
   };
 
   const toggleDarkMode = () => {
@@ -230,7 +298,8 @@ const PomodoroTimer = () => {
 
       {/* Mini Stats */}
       <View style={styles.miniStats}>
-        <Text style={styles.statsText}>Cycles: {cycles}</Text>
+        <Text style={styles.statsText}>Total: {stats.total}</Text>
+        <Text style={styles.statsText}>Today: {stats.today}</Text>
         <Text style={styles.statsText}>
           {isBreak ? 'Break' : 'Work'} Session
         </Text>
@@ -288,6 +357,13 @@ const PomodoroTimer = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Mood Selector Modal */}
+      <MoodSelector
+        visible={showMoodSelector}
+        onMoodSelect={handleMoodSelect}
+        isDarkMode={isDarkMode}
+      />
     </View>
   );
 };
