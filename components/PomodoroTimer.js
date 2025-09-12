@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import LiquidProgress from './LiquidProgress';
 import MoodSelector from './MoodSelector';
+import BreakActivity from './BreakActivity';
 import { initDatabase, addCycle, getStatistics } from '../utils/database';
 
 const { width, height } = Dimensions.get('window');
@@ -33,6 +34,7 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
   const [stats, setStats] = useState({ total: 0, work: 0, breaks: 0, today: 0 });
   const [showMoodSelector, setShowMoodSelector] = useState(false);
   const [pendingWorkCycle, setPendingWorkCycle] = useState(null);
+  const [breakActivityData, setBreakActivityData] = useState(null);
   const intervalRef = useRef(null);
 
   // Timer durations
@@ -84,6 +86,7 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
   }, [isRunning, timeLeft]);
 
 
+
   const handleTimerComplete = async () => {
     setIsRunning(false);
     Vibration.vibrate([0, 500, 200, 500]); // Vibration pattern
@@ -96,7 +99,7 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
       });
       setShowMoodSelector(true);
     } else {
-      // Break completed - save directly and start work
+      // Break completed - save directly and cycle to work (don't auto-start work timer)
       if (db) {
         try {
           await addCycle(db, 'break', breakDuration);
@@ -110,10 +113,8 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
       setIsBreak(false);
       setCurrentCycle(1);
       setTimeLeft(WORK_DURATION);
-      // Auto-start work timer
-      setTimeout(() => {
-        setIsRunning(true);
-      }, 1000);
+      setBreakActivityData(null); // Clear break activity data
+      // Don't auto-start work timer - wait for user to start manually
     }
   };
 
@@ -134,18 +135,29 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
     }
     
     if (mood === 'keep_going') {
-      // Keep going - restart work timer
+      // Keep going - restart work timer immediately (skip break)
       setCycles(prev => prev + 1);
       setTimeLeft(WORK_DURATION);
       setTimeout(() => {
         setIsRunning(true);
       }, 1000);
     } else {
-      // Normal flow - start break
+      // Normal flow - start break and auto-start break timer
+      // Log session data with work time
+      logSessionData(mood, breakDuration, workDuration);
+      
+      // Set break activity data for AI suggestions
+      setBreakActivityData({
+        workedFor: workDuration,
+        breakTime: breakDuration,
+        mood: mood
+      });
+      
       setCycles(prev => prev + 1);
       setIsBreak(true);
       setCurrentCycle(2);
       setTimeLeft(BREAK_DURATION);
+      // Auto-start break timer
       setTimeout(() => {
         setIsRunning(true);
       }, 1000);
@@ -164,6 +176,9 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
         setTimeLeft(WORK_DURATION);
       } else {
         // Currently on work, switch to break
+        // Log session data for manual switch
+        logSessionData('Manual switch', breakDuration, workDuration);
+        
         setIsBreak(true);
         setCurrentCycle(2);
         setTimeLeft(BREAK_DURATION);
@@ -209,12 +224,24 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
     setIsBreak(false);
     setCurrentCycle(1);
     setTimeLeft(workDuration * 60);
+    setBreakActivityData(null); // Clear break activity data
   };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const logSessionData = (mood, breakTime, workTime) => {
+    const timestamp = new Date().toISOString();
+    
+    console.log('📊 Session Data:', {
+      timestamp,
+      mood: mood || 'No mood selected',
+      workedFor: `${workTime} minutes`,
+      breakTime: `${breakTime} minutes`
+    });
   };
 
   const getProgress = () => {
@@ -235,7 +262,6 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
             color={isDarkMode ? "#E0E0E0" : "#666"} 
           />
         </TouchableOpacity>
-        <Text style={styles.appName}>Rhythm</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity style={styles.headerButton} onPress={toggleCycle}>
             <Ionicons 
@@ -277,6 +303,16 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
           </View>
         </View>
       </View>
+
+      {/* Break Activity Suggestion */}
+      {isBreak && breakActivityData && (
+        <BreakActivity
+          workedFor={breakActivityData.workedFor}
+          breakTime={breakActivityData.breakTime}
+          mood={breakActivityData.mood}
+          isDarkMode={isDarkMode}
+        />
+      )}
 
       {/* Controls */}
       <View style={styles.controls}>
