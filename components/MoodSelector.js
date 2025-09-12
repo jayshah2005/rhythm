@@ -15,7 +15,7 @@ const MoodSelector = ({ visible, onMoodSelect, isDarkMode }) => {
     { emoji: '🥱', label: 'Tired', value: 'tired' },
     { emoji: '😁', label: 'Good', value: 'good' },
     { emoji: '🫠', label: 'Stressed', value: 'stressed' },
-    { emoji: '😎', label: 'Keep Going', value: 'keep_going' },
+    { emoji: '😎', label: 'In the Rhythm', value: 'keep_going' },
   ];
 
   const styles = createStyles(isDarkMode);

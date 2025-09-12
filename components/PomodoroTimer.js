@@ -18,11 +18,10 @@ import { initDatabase, addCycle, getStatistics } from '../utils/database';
 
 const { width, height } = Dimensions.get('window');
 
-const PomodoroTimer = () => {
+const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [cycles, setCycles] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [workDuration, setWorkDuration] = useState(0.1); // minutes
   const [breakDuration, setBreakDuration] = useState(0.1); // minutes
@@ -155,9 +154,6 @@ const PomodoroTimer = () => {
     setPendingWorkCycle(null);
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const toggleCycle = () => {
     if (!isRunning) {
@@ -232,6 +228,13 @@ const PomodoroTimer = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={onEndSession}>
+          <Ionicons 
+            name="arrow-back" 
+            size={24} 
+            color={isDarkMode ? "#E0E0E0" : "#666"} 
+          />
+        </TouchableOpacity>
         <Text style={styles.appName}>Rhythm</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity style={styles.headerButton} onPress={toggleCycle}>
@@ -244,7 +247,7 @@ const PomodoroTimer = () => {
           <TouchableOpacity style={styles.headerButton} onPress={openSettings}>
             <Ionicons name="settings-outline" size={24} color={isDarkMode ? "#E0E0E0" : "#666"} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={toggleDarkMode}>
+          <TouchableOpacity style={styles.headerButton} onPress={onToggleDarkMode}>
             <Ionicons 
               name={isDarkMode ? "sunny" : "moon-outline"} 
               size={24} 
@@ -293,6 +296,13 @@ const PomodoroTimer = () => {
             size={32} 
             color="white" 
           />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.controlButton, styles.endSessionButton]}
+          onPress={onEndSession}
+        >
+          <Ionicons name="stop" size={24} color={isDarkMode ? "#E0E0E0" : "#666"} />
         </TouchableOpacity>
       </View>
 
@@ -381,6 +391,10 @@ const createStyles = (isDarkMode) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+  },
   appName: {
     fontSize: 28,
     fontWeight: '700',
@@ -460,6 +474,12 @@ const createStyles = (isDarkMode) => StyleSheet.create({
     elevation: 8,
   },
   resetButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: isDarkMode ? '#333' : '#ECF0F1',
+  },
+  endSessionButton: {
     width: 50,
     height: 50,
     borderRadius: 25,

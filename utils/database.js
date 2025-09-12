@@ -81,6 +81,44 @@ export const getStatistics = (db) => {
       throw error;
     }
   };
+
+// Get today's statistics for home screen
+export const getTodayStats = (db) => {
+  try {
+    // Total time worked today (in minutes)
+    const timeWorkedRow = db.getAllSync(`
+      SELECT CAST(SUM(duration) AS INTEGER) AS totalTime 
+      FROM cycles 
+      WHERE type = "work" AND DATE(completed_at) = DATE("now")
+    `)[0];
+    
+    // Total Pomodoro cycles today (work + break cycles)
+    const cyclesTodayRow = db.getAllSync(`
+      SELECT CAST(COUNT(*) AS INTEGER) AS cyclesToday 
+      FROM cycles 
+      WHERE DATE(completed_at) = DATE("now")
+    `)[0];
+    
+    // Overall mood today (most frequent mood from work sessions)
+    const moodRow = db.getAllSync(`
+      SELECT mood, COUNT(*) as count 
+      FROM cycles 
+      WHERE type = "work" AND mood IS NOT NULL AND DATE(completed_at) = DATE("now")
+      GROUP BY mood 
+      ORDER BY count DESC 
+      LIMIT 1
+    `)[0];
+    
+    return {
+      totalTimeWorked: timeWorkedRow?.totalTime ?? 0,
+      totalCyclesToday: cyclesTodayRow?.cyclesToday ?? 0,
+      overallMood: moodRow?.mood ?? null,
+    };
+  } catch (error) {
+    console.error('Error fetching today stats:', error);
+    throw error;
+  }
+};
   
   
 // Delete all cycles (for testing/reset)
