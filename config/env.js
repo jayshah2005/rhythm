@@ -17,7 +17,8 @@ const getEnvVar = (key, defaultValue = null) => {
 };
 
 export const ENV = {
-  GEMINI_API_KEY: getEnvVar('GEMINI_API_KEY', 'AIzaSyAx6R8RU9-_zZBJqBxllasEmhevBMqXWRY'),
+  GEMINI_API_KEY: getEnvVar('GEMINI_API_KEY', 'your_gemini_api_key_here'),
+  ARCADE_API_KEY: getEnvVar('ARCADE_API_KEY', 'your_arcade_api_key_here'),
   NODE_ENV: getEnvVar('NODE_ENV', 'development'),
 };
 

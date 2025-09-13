@@ -29,7 +29,8 @@ export default {
       favicon: "./assets/favicon.png"
     },
     extra: {
-      GEMINI_API_KEY: process.env.GEMINI_API_KEY || 'your_api_key_here'
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY ,
+      ARCADE_API_KEY: process.env.ARCADE_API_KEY
     }
   }
 };

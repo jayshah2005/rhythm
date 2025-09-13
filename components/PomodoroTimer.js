@@ -25,7 +25,7 @@ const PomodoroTimer = ({ onEndSession, isDarkMode, onToggleDarkMode }) => {
   const [cycles, setCycles] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [workDuration, setWorkDuration] = useState(0.1); // minutes
-  const [breakDuration, setBreakDuration] = useState(0.1); // minutes
+  const [breakDuration, setBreakDuration] = useState(6); // minutes
   const [currentCycle, setCurrentCycle] = useState(1); // 1 = work, 2 = break
   const [tempWorkDuration, setTempWorkDuration] = useState('25'); // for input
   const [tempBreakDuration, setTempBreakDuration] = useState('5'); // for input
