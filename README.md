@@ -121,28 +121,6 @@ When a video is selected:
 3. **Watch Button**: Opens video directly in YouTube app
 4. **Fallback**: If video search fails, shows AI text suggestion
 
-## 🎨 Mood-Based Break Activities
-
-### Tired
-- **Short**: Breathing exercises, quick stretches
-- **Medium**: Gentle yoga, guided meditation
-- **Long**: Deep relaxation, restorative yoga
-
-### Stressed
-- **Short**: Stress relief breathing, quick calm techniques
-- **Medium**: Stress relief yoga, mindfulness meditation
-- **Long**: Progressive muscle relaxation, calming yoga
-
-### Good
-- **Short**: Energizing dance, uplifting breathing
-- **Medium**: Positive affirmations, fun stretches
-- **Long**: Uplifting movement, happy dance workouts
-
-### Keep Going
-- **Short**: Quick energy boost, motivational breathing
-- **Medium**: Productivity tips, energizing music
-- **Long**: Focus music, guided productivity meditation
-
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -177,12 +155,6 @@ expo build:android
 expo build:web
 ```
 
-### Environment Variables in Production
-Make sure to set your API keys in your deployment platform:
-- Expo: Use `expo secrets` or environment variables
-- EAS Build: Configure in `eas.json`
-- Other platforms: Set environment variables accordingly
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -190,24 +162,6 @@ Make sure to set your API keys in your deployment platform:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Expo](https://expo.dev/) for the development platform
-- [Google Gemini](https://ai.google.dev/) for AI-powered suggestions
-- [Arcade.dev](https://arcade.dev/) for YouTube video search
-- [React Native](https://reactnative.dev/) for the mobile framework
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-1. Check the [Issues](https://github.com/yourusername/rhythm-1/issues) page
-2. Create a new issue with detailed information
-3. Include device type, OS version, and error messages
 
 ---
 
